@@ -50,7 +50,7 @@ t_philo_data	*init_data(int argc, char **argv, t_mutex *mutex)
 	else
 	{
 		data->optional = false;
-		data->number_of_times_each_philosopher_must_eat = 0;
+		data->number_of_times_each_philosopher_must_eat = -1;
 	}
 	return (data);
 }
@@ -60,23 +60,48 @@ int	main(int argc, char **argv)
 	pthread_t		*threads;
 	t_mutex			*mutex;
 	t_philo_data	*data;
+	int				i;
 
+	i = 0;
 	if (argc != 4 && argc != 5)
 		return (0);
 	mutex = malloc(sizeof(t_mutex));
+	if (!mutex)
+		return (0);
 	mutex->i = malloc(sizeof(int));
+	if (!mutex->i)
+	{
+		free(mutex);
+		return (0);
+	}
 	data = init_data(argc, argv, mutex);
+	if (!data)
+		return (0);
+	threads = malloc(data->number_of_philosphers * sizeof(pthread_t));
+	if (!threads)
+	{
+		free(data);
+		free(mutex->i);
+		free(mutex);
+		return (0);
+	}
 	pthread_mutex_init(&mutex->mutex, NULL);
 	*mutex->i = 0;
-	if (pthread_create(&t1, NULL, &routine, (void *)mutex) != 0)
+	while (i < data->number_of_philosphers)
 	{
-		perror("pthread_create\n");
-		return (1);
+		if (pthread_create(threads + i, NULL, &routine, (void *)mutex) != 0)
+		{
+			perror("pthread_create\n");
+			return (1);
+		}
+		pthread_join(*(threads + i), NULL);
+		i++;
 	}
-	pthread_join(t1, NULL);
+	printf("%d\n", *mutex->i);
 	pthread_mutex_destroy(&mutex->mutex);
 	free(mutex->i);
 	free(mutex);
+	free(threads);
 	free(data);
 	return (0);
 }
