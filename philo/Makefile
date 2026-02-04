@@ -2,9 +2,9 @@ NAME = philo
 
 CC = cc
 
-CC_FLAGS = -Wall -Werror -Wextra
+CC_FLAGS = -pthread -Wall -Werror -Wextra
 
-SRCS = philo.c
+SRCS = philo.c philo_utils.c
 
 OBJS = $(SRCS:.c=.o)
 
