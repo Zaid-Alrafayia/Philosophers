@@ -3,105 +3,123 @@
 /*                                                        :::      ::::::::   */
 /*   philo.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zaalrafa <zaalrafa@student.42.fr>          +#+  +:+       +#+        */
+/*   By: zaalrafa <zaalrafa@student.42amman.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/02/02 20:08:27 by zaalrafa          #+#    #+#             */
-/*   Updated: 2026/02/04 13:30:10 by zaalrafa         ###   ########.fr       */
+/*   Created: 2026/02/26 17:26:36 by zaalrafa          #+#    #+#             */
+/*   Updated: 2026/06/15 16:10:01 by zaalrafa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
+#include <pthread.h>
+#include <unistd.h>
 
-void	*routine(void *args)
+static void	check_one_philo(t_table *table)
 {
-	t_mutex	*mutex;
-
-	mutex = (t_mutex *)args;
-	pthread_mutex_lock(&mutex->mutex);
-	if (!mutex->i)
-		return (0);
-	while (*mutex->i < 100000)
-	{
-		(*mutex->i)++;
-	}
-	pthread_mutex_unlock(&mutex->mutex);
-	return (NULL);
+	print_log(table, 1, TAKEN_FORK);
+	ft_usleep(table, table->time_to_die);
+	print_log(table, 1, DIED);
+	exit(1);
 }
 
-t_philo_data	*init_data(int argc, char **argv, t_mutex *mutex)
+void	start_simulation(t_table *table)
 {
-	t_philo_data	*data;
-
-	data = malloc(sizeof(t_philo_data));
-	if (!data)
-	{
-		free(mutex->i);
-		free(mutex);
-		return (NULL);
-	}
-	data->number_of_philosphers = ft_atoi(argv[1]);
-	data->time_to_die = ft_atoi(argv[2]);
-	data->time_to_sleep = ft_atoi(argv[3]);
-	if (argc == 5)
-	{
-		data->optional = true;
-		data->number_of_times_each_philosopher_must_eat = ft_atoi(argv[4]);
-	}
-	else
-	{
-		data->optional = false;
-		data->number_of_times_each_philosopher_must_eat = -1;
-	}
-	return (data);
-}
-
-int	main(int argc, char **argv)
-{
-	pthread_t		*threads;
-	t_mutex			*mutex;
-	t_philo_data	*data;
-	int				i;
+	int	i;
 
 	i = 0;
-	if (argc != 4 && argc != 5)
-		return (0);
-	mutex = malloc(sizeof(t_mutex));
-	if (!mutex)
-		return (0);
-	mutex->i = malloc(sizeof(int));
-	if (!mutex->i)
+	while (i < table->num_philos)
 	{
-		free(mutex);
-		return (0);
-	}
-	data = init_data(argc, argv, mutex);
-	if (!data)
-		return (0);
-	threads = malloc(data->number_of_philosphers * sizeof(pthread_t));
-	if (!threads)
-	{
-		free(data);
-		free(mutex->i);
-		free(mutex);
-		return (0);
-	}
-	pthread_mutex_init(&mutex->mutex, NULL);
-	*mutex->i = 0;
-	while (i < data->number_of_philosphers)
-	{
-		if (pthread_create(threads + i, NULL, &routine, (void *)mutex) != 0)
-		{
-			perror("pthread_create\n");
-			return (1);
-		}
-		pthread_join(*(threads + i), NULL);
+		pthread_create(&table->philos[i].thread, NULL, philo_routine,
+			&table->philos[i]);
+		table->philos[i].last_meal_time = table->start_time;
 		i++;
 	}
-	printf("%d\n", *mutex->i);
-	pthread_mutex_destroy(&mutex->mutex);
-	free(mutex->i);
-	free(mutex);
-	free(threads);
-	free(data);
+}
+
+bool	check_full(t_philo *philo)
+{
+	int	i;
+
+	i = 0;
+	while (i < philo->table->num_philos)
+	{
+		pthread_mutex_lock(&philo[i].table->meals_mutex);
+		if (!philo[i].full)
+		{
+			pthread_mutex_unlock(&philo[i].table->meals_mutex);
+			return (false);
+		}
+		pthread_mutex_unlock(&philo[i].table->meals_mutex);
+		i++;
+	}
+	return (true);
+}
+
+void	check_starvation(t_table *table)
+{
+	int			i;
+	long long	last_meal;
+
+	i = 0;
+	while (1)
+	{
+		if (i == table->num_philos)
+			i = 0;
+		pthread_mutex_lock(&table->meals_mutex);
+		last_meal = table->philos[i].last_meal_time;
+		pthread_mutex_unlock(&table->meals_mutex);
+		if ((get_current_time() - last_meal) > table->time_to_die)
+		{
+			pthread_mutex_lock(&table->dead_mutex);
+			table->dead_flag = true;
+			pthread_mutex_unlock(&table->dead_mutex);
+			print_log(table, table->philos[i].id, DIED);
+			return ;
+		}
+		if (table->max_meals > 0 && !table->all_full)
+		{
+			if (check_full(table->philos))
+			{
+				table->all_full = true;
+				return ;
+			}
+		}
+		usleep(1000);
+		i++;
+	}
+}
+
+int	main(int argc, char *argv[])
+{
+	t_table	*table;
+	int		i;
+
+	i = 0;
+	table = NULL;
+	if (argc == 5 || argc == 6)
+	{
+		if (!check_args(argv))
+		{
+			error_exit("invalid arguments!");
+		}
+		table = malloc(sizeof(t_table));
+		if (!table)
+			error_exit("failed to allocate memory for table");
+		data_init(table, argc, argv);
+		table->start_time = get_current_time();
+		if (table->num_philos == 1)
+			check_one_philo(table);
+		start_simulation(table);
+		check_starvation(table);
+		while (i < table->num_philos)
+		{
+			pthread_join(table->philos[i].thread, NULL);
+			i++;
+		}
+		free_table(table);
+		free(table);
+	}
+	else
+		error_exit("format must be: ./philo 5 100 200 300 [5]");
 	return (0);
 }

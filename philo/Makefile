@@ -1,27 +1,15 @@
 NAME = philo
+SRCS = philo.c utils.c args.c utils_time.c init.c routine.c thread_routine.c
 
 CC = cc
-
-CC_FLAGS = -pthread -Wall -Werror -Wextra
-
-SRCS = philo.c philo_utils.c
-
+CFLAGS =  -Wall -Wextra -Werror -g -pthread
 OBJS = $(SRCS:.c=.o)
-
-
-all:$(NAME)
-
-$(NAME):$(OBJS)
-	$(CC) $(CC_FLAGS) $(OBJS) -o $(NAME)
-
-%.o:%.c
-	$(CC) $(CC_FLAGS) -I. -c $< -o $@
-
+all: $(NAME)
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 clean:
 	rm -f $(OBJS)
-
-fclean:
-	rm -f $(NAME) $(OBJS)
-
-re : clean all
-
+fclean:clean
+	rm -f $(NAME)
+re: fclean $(NAME)
+.PHONY: all clean fclean re
