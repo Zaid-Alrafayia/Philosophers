@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philo.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: zaalrafa <zaalrafa@student.42amman.com>    +#+  +:+       +#+        */
+/*   By: zaalrafa <zaalrafa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/02/26 17:26:36 by zaalrafa          #+#    #+#             */
-/*   Updated: 2026/06/15 16:10:01 by zaalrafa         ###   ########.fr       */
+/*   Updated: 2026/06/16 17:27:31 by zaalrafa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,7 +84,7 @@ void	check_starvation(t_table *table)
 				return ;
 			}
 		}
-		usleep(1000);
+		ft_usleep(table, 100);
 		i++;
 	}
 }
