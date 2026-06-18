@@ -6,7 +6,7 @@
 /*   By: zaalrafa <zaalrafa@student.42amman.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/15 14:24:13 by zaalrafa          #+#    #+#             */
-/*   Updated: 2026/06/15 16:13:55 by zaalrafa         ###   ########.fr       */
+/*   Updated: 2026/06/18 16:08:33 by zaalrafa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,13 +27,15 @@ static bool	simulation_finished(t_table *table)
 
 void	*philo_routine(void *data)
 {
-	t_philo *philo = (t_philo *)data;
-	int max_meals = philo->table->max_meals;
+	t_philo	*philo;
+	int		max_meals;
+
+	philo = (t_philo *)data;
+	max_meals = philo->table->max_meals;
 	if (philo->id % 2 == 0)
-		usleep(15000);
+		usleep(10000);
 	while (!simulation_finished(philo->table))
 	{
-		thinking(philo);
 		eating(philo);
 		if (max_meals > 0 && philo->meals_counter >= max_meals)
 		{
@@ -43,6 +45,7 @@ void	*philo_routine(void *data)
 			break ;
 		}
 		sleeping(philo);
+		thinking(philo);
 	}
 	return (NULL);
 }

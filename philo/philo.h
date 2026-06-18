@@ -82,5 +82,7 @@ void					thinking(t_philo *philos);
 void					sleeping(t_philo *philos);
 void					eating(t_philo *philos);
 void					*philo_routine(void *data);
+void					check_one_philo(t_table *table);
+void					start_simulation(t_table *table);
 
 #endif // !PHILO_H

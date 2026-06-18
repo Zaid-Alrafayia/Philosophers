@@ -6,7 +6,7 @@
 /*   By: zaalrafa <zaalrafa@student.42amman.com>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/20 04:42:15 by zaalrafa          #+#    #+#             */
-/*   Updated: 2026/06/15 17:50:52 by zaalrafa         ###   ########.fr       */
+/*   Updated: 2026/06/18 16:03:45 by zaalrafa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,9 +43,6 @@ void	eating(t_philo *philos)
 	print_log(philos->table, philos->id, EAT);
 	philos->last_meal_time = get_current_time();
 	philos->meals_counter++;
-	if (philos->table->max_meals > 0
-		&& philos->meals_counter >= philos->table->max_meals)
-		philos->full = true;
 	pthread_mutex_unlock(&philos->table->meals_mutex);
 	ft_usleep(philos->table, philos->table->time_to_eat);
 	unlock_forks(philos);
@@ -59,8 +56,14 @@ void	sleeping(t_philo *philos)
 
 void	thinking(t_philo *philos)
 {
+	long	think_time;
+
 	print_log(philos->table, philos->id, THINK);
 	if (philos->table->num_philos % 2 != 0)
-		ft_usleep(philos->table,  (philos->table->time_to_eat * 2)
-			- philos->table->time_to_sleep);
+	{
+		think_time = (philos->table->time_to_eat * 2)
+			- philos->table->time_to_sleep;
+		if (think_time > 0)
+			ft_usleep(philos->table, think_time / 2);
+	}
 }

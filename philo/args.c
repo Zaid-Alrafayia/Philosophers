@@ -16,26 +16,20 @@ bool	check_isdigit(char **argv)
 {
 	int	i;
 	int	j;
-	int	flag;
 
 	i = 1;
-	flag = 0;
 	while (argv[i])
 	{
 		j = 0;
+		if (argv[i][j] == '-' || argv[i][j] == '+')
+			j++;
+		if (!argv[i][j])
+			return (false);
 		while (argv[i][j])
 		{
-			if (argv[i][j] >= '0' && argv[i][j] <= '9')
-				j++;
-			else if ((argv[i][j] == '-' || argv[i][j] == '+'))
-			{
-				j++;
-				flag++;
-			}
-			else if (flag > 1)
+			if (argv[i][j] < '0' || argv[i][j] > '9')
 				return (false);
-			else
-				return (false);
+			j++;
 		}
 		i++;
 	}

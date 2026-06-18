@@ -68,3 +68,25 @@ void	data_init(t_table *table, int argc, char **argv)
 	pthread_mutex_init(&table->print_mutex, NULL);
 	init_philos(table, table->philos);
 }
+
+void	check_one_philo(t_table *table)
+{
+	print_log(table, 1, TAKEN_FORK);
+	ft_usleep(table, table->time_to_die);
+	print_log(table, 1, DIED);
+	exit(1);
+}
+
+void	start_simulation(t_table *table)
+{
+	int	i;
+
+	i = 0;
+	while (i < table->num_philos)
+	{
+		table->philos[i].last_meal_time = table->start_time;
+		pthread_create(&table->philos[i].thread, NULL, philo_routine,
+			&table->philos[i]);
+		i++;
+	}
+}
